@@ -1,0 +1,5 @@
+# Ejecuta la revisión dos veces al día (08:00 y 16:30, zona horaria del servidor)
+# Ajusta RUTA_REPO y RUTA_PYTHON_VENV según tu máquina.
+
+0 8 * * * cd /workspace/GestorMarket && /usr/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> logs/cardmarket-monitor.log 2>&1
+30 16 * * * cd /workspace/GestorMarket && /usr/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> logs/cardmarket-monitor.log 2>&1

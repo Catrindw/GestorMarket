@@ -68,6 +68,30 @@ gh auth status
 git clone https://github.com/Catrindw/GestorMarket.git ~/proyectos/GestorMarket
 ```
 
+
+
+### Si te aparece el código de un solo uso (ejemplo `46FC-7C0B`)
+
+Cuando veas:
+
+- `First copy your one-time code: XXXX-XXXX`
+- `Press Enter to open github.com in your browser...`
+
+haz esto exactamente:
+
+1) Copia el código (por ejemplo `46FC-7C0B`).
+2) Pulsa **Enter** en la terminal.
+3) Se abrirá GitHub en el navegador.
+4) Pega el código cuando GitHub te lo pida.
+5) Autoriza `GitHub CLI`.
+6) Vuelve a terminal y verifica:
+
+```bash
+gh auth status
+```
+
+Si `gh auth status` muestra tu usuario, ya está autenticado correctamente.
+
 ### Opción B: usar token personal (PAT)
 
 - En GitHub crea un token en: `Settings -> Developer settings -> Personal access tokens`.

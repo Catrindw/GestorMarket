@@ -1,5 +1,5 @@
 # Ejecuta la revisión dos veces al día (08:00 y 16:30, zona horaria del servidor)
-# Ajusta RUTA_REPO y RUTA_PYTHON_VENV según tu máquina.
+# Ejemplo para Ubuntu en /home/nacho/proyectos/GestorMarket
 
-0 8 * * * cd /workspace/GestorMarket && /usr/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> logs/cardmarket-monitor.log 2>&1
-30 16 * * * cd /workspace/GestorMarket && /usr/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> logs/cardmarket-monitor.log 2>&1
+0 8 * * * cd /home/nacho/proyectos/GestorMarket && /home/nacho/proyectos/GestorMarket/.venv/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> /home/nacho/proyectos/GestorMarket/logs/cardmarket-monitor.log 2>&1
+30 16 * * * cd /home/nacho/proyectos/GestorMarket && /home/nacho/proyectos/GestorMarket/.venv/bin/python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt >> /home/nacho/proyectos/GestorMarket/logs/cardmarket-monitor.log 2>&1

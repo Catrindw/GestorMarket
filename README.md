@@ -26,6 +26,7 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 - `scripts/run_monitor_linux.sh`: ejecución manual asistida en Ubuntu/Linux.
 - `scripts/run_monitor_windows.ps1`: ejecución manual asistida en Windows.
 - `scripts/run_monitor_auto_linux.sh`: ejecución Linux con detección automática de ruta del repo.
+- `scripts/install_cron_linux.sh`: instala cron con rutas reales del entorno local.
 
 ---
 
@@ -279,6 +280,24 @@ python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.t
 
 
 
+
+
+### Si sigue saliendo 403 con traceback antiguo
+
+Si el traceback te marca `get_html` con `response.raise_for_status()` directamente, estás usando una versión antigua del script.
+
+Actualiza rama y dependencias:
+
+```bash
+cd ~/proyectos/GestorMarket
+git fetch --all --prune
+git pull
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Luego reintenta.
+
 ## Checklist rápido de `.env` antes de lanzar
 
 Verifica esto:
@@ -298,6 +317,22 @@ cd ~/proyectos/GestorMarket
 source .venv/bin/activate
 python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
 ```
+
+
+
+### Instalación recomendada de cron (automática y con rutas correctas)
+
+En vez de copiar `cron/cardmarket-monitor.cron` manualmente, usa:
+
+```bash
+cd ~/proyectos/GestorMarket
+bash scripts/install_cron_linux.sh
+```
+
+Esto instala cron con:
+- ruta real del repo,
+- Python del `.venv`,
+- log en `~/proyectos/GestorMarket/logs/cardmarket-monitor.log`.
 
 Si quieres programarlo dos veces al día:
 

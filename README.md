@@ -28,6 +28,104 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 
 ---
 
+
+
+## Ubuntu: prueba completa (copiar y pegar)
+
+> Esta sección está pensada para hacerlo **sin conocimientos técnicos**.
+
+### 1) Abrir Terminal
+
+- En Ubuntu, pulsa la tecla **Super/Windows**, escribe `Terminal` y ábrela.
+
+### 2) Entrar en la carpeta del proyecto
+
+Copia y pega (ajusta la ruta si tu carpeta está en otro sitio):
+
+```bash
+cd /workspace/GestorMarket
+```
+
+Para confirmar que estás en el sitio correcto:
+
+```bash
+pwd
+```
+
+Deberías ver: `/workspace/GestorMarket`
+
+### 3) Ejecutar todo automático (primera prueba)
+
+Copia y pega:
+
+```bash
+bash scripts/run_monitor_linux.sh
+```
+
+Qué pasará automáticamente:
+- Se crea el entorno Python (`.venv`) si no existe.
+- Se instalan dependencias.
+- Si no existe `.env`, se crea desde `.env.example`.
+- Se lanza la revisión de precios.
+
+### 4) Configurar tus datos (muy importante)
+
+Abre el archivo de configuración:
+
+```bash
+nano .env
+```
+
+Busca y cambia como mínimo:
+
+- `OUR_TOTAL_SALES=0`  → pon aquí tus ventas reales.
+- Si quieres correo, cambia `EMAIL_ENABLED=false` a `EMAIL_ENABLED=true` y completa `SMTP_*`.
+
+Guardar en `nano`:
+- `Ctrl + O` (guardar), Enter para confirmar.
+- `Ctrl + X` (salir).
+
+### 5) Ejecutar otra vez ya con tu configuración
+
+```bash
+bash scripts/run_monitor_linux.sh
+```
+
+### 6) Si falla, copiar el error para revisarlo
+
+Ejecuta en modo manual con más detalle:
+
+```bash
+source .venv/bin/activate
+python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
+```
+
+### 7) Verificar rápidamente que "funciona"
+
+Si todo va bien, verás alguno de estos resultados:
+- `No se detectaron cartas con precio a corregir...`
+- Un listado con cartas y recomendación de `bajar` o `subir`.
+
+### 8) Programarlo a las 08:00 y 16:30 (cuando ya esté probado)
+
+Instala la programación:
+
+```bash
+crontab cron/cardmarket-monitor.cron
+```
+
+Comprueba que quedó guardado:
+
+```bash
+crontab -l
+```
+
+### 9) Ver logs de ejecuciones automáticas
+
+```bash
+tail -n 100 logs/cardmarket-monitor.log
+```
+
 ## Guía rápida para probar (sin experiencia técnica)
 
 > Si no sabes por dónde empezar, sigue **exactamente** estos pasos.

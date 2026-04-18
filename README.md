@@ -277,6 +277,35 @@ Luego ejecuta:
 python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
 ```
 
+
+
+## Checklist rápido de `.env` antes de lanzar
+
+Verifica esto:
+
+- `CARDMARKET_USERNAME=sakurakawaii-va`
+- `OUR_TOTAL_SALES=<tus ventas reales>` (no dejar en `0` si ya tienes ventas)
+- `PROFILE_URLS=...YuGiOh..., ...Pokemon...`
+- `USE_CLOUDSCRAPER=true`
+- `EMAIL_ENABLED=false` (si no quieres correo)
+- `WEBHOOK_ENABLED=true`
+- `WEBHOOK_URL=https://ntfy.sh/gestormarket-sakurakawaii-va`
+
+Y luego ejecuta:
+
+```bash
+cd ~/proyectos/GestorMarket
+source .venv/bin/activate
+python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
+```
+
+Si quieres programarlo dos veces al día:
+
+```bash
+crontab cron/cardmarket-monitor.cron
+crontab -l
+```
+
 ## Error 403 en Cardmarket (bloqueo anti-bot)
 
 Si el monitor muestra `403 Client Error: Forbidden`, no es fallo tuyo: Cardmarket está bloqueando la petición automática.

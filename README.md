@@ -153,6 +153,36 @@ bash scripts/run_monitor_auto_linux.sh
 
 ---
 
+
+
+## Si clona bien pero no existe `scripts/run_monitor_auto_linux.sh`
+
+Esto suele pasar cuando el repo local está en un commit/rama antigua.
+
+Ejecuta estos comandos dentro de `~/proyectos/GestorMarket`:
+
+```bash
+cd ~/proyectos/GestorMarket
+git remote -v
+git branch -a
+git pull --all --prune
+ls -la
+ls -la scripts
+```
+
+Si `scripts/run_monitor_auto_linux.sh` sigue sin aparecer, puedes probar igualmente **sin script**:
+
+```bash
+cd ~/proyectos/GestorMarket
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
+```
+
+Con eso confirmamos que el monitor funciona aunque no esté el helper script.
+
 ## Ubuntu: prueba completa (copiar y pegar)
 
 > Esta sección está pensada para hacerlo **sin conocimientos técnicos**.

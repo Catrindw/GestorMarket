@@ -33,6 +33,46 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 
 
 
+
+
+## GitHub con “Continuar con Google” (sin contraseña de GitHub)
+
+Si entraste con Google, es normal que **no tengas una contraseña de GitHub para usar en `git clone/push` por HTTPS**.
+
+Tienes 2 opciones sencillas:
+
+### Opción A (recomendada): autenticar con GitHub CLI en navegador
+
+1) Instala GitHub CLI (si no lo tienes):
+
+```bash
+sudo apt update
+sudo apt install -y gh
+```
+
+2) Inicia sesión con navegador:
+
+```bash
+gh auth login -h github.com -p https -w
+```
+
+3) Comprueba sesión:
+
+```bash
+gh auth status
+```
+
+4) Clona el repo:
+
+```bash
+git clone https://github.com/Catrindw/GestorMarket.git ~/proyectos/GestorMarket
+```
+
+### Opción B: usar token personal (PAT)
+
+- En GitHub crea un token en: `Settings -> Developer settings -> Personal access tokens`.
+- Cuando Git pida contraseña en terminal, pega el token (no tu contraseña de Google).
+
 ## Caso real: Ubuntu vacío (solo GitHub, sin nada local)
 
 Si te sale este error:
@@ -54,10 +94,10 @@ mkdir -p ~/proyectos
 cd ~/proyectos
 ```
 
-2) Clona tu repo de GitHub (sustituye URL):
+2) Clona tu repo de GitHub:
 
 ```bash
-git clone https://github.com/TU_USUARIO/GestorMarket.git
+git clone https://github.com/Catrindw/GestorMarket.git
 ```
 
 3) Entra en el repo:
@@ -308,7 +348,7 @@ Reglas:
 
 Comandos preferidos:
 - `mkdir -p ~/proyectos && cd ~/proyectos`
-- `git clone <URL_DE_MI_REPO> GestorMarket` (solo si no existe local)
+- `git clone https://github.com/Catrindw/GestorMarket.git GestorMarket` (solo si no existe local)
 - `cd ~/proyectos/GestorMarket`
 - `bash scripts/run_monitor_auto_linux.sh`
 - Si falla autodetección: `bash scripts/run_monitor_auto_linux.sh ~/proyectos/GestorMarket`

@@ -155,6 +155,26 @@ bash scripts/run_monitor_auto_linux.sh
 
 
 
+
+
+## Si el repo solo tiene `.gitkeep` (sin `src/`, `scripts/`, `.env.example`)
+
+Eso significa que estás en una rama vacía (normalmente `main`) y **no** en la rama donde está el trabajo.
+
+En tu salida se ve esta rama remota:
+- `origin/codex/setup-daily-stock-price-comparison-task`
+
+Cámbiate a esa rama con:
+
+```bash
+cd ~/proyectos/GestorMarket
+git fetch --all --prune
+git switch -c codex/setup-daily-stock-price-comparison-task --track origin/codex/setup-daily-stock-price-comparison-task
+ls -la
+```
+
+Después de eso ya deberían aparecer `src/`, `scripts/`, `requirements.txt`, `.env.example`, etc.
+
 ## Si clona bien pero no existe `scripts/run_monitor_auto_linux.sh`
 
 Esto suele pasar cuando el repo local está en un commit/rama antigua.
@@ -182,6 +202,25 @@ python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.tx
 ```
 
 Con eso confirmamos que el monitor funciona aunque no esté el helper script.
+
+### Dependencias mínimas de Ubuntu (si aparecen errores de `venv` o `pip`)
+
+Si sale `ensurepip is not available` o `pip not found`, instala:
+
+```bash
+sudo apt update
+sudo apt install -y python3-venv python3-pip
+```
+
+Y vuelve a ejecutar:
+
+```bash
+cd ~/proyectos/GestorMarket
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
 
 ## Ubuntu: prueba completa (copiar y pegar)
 

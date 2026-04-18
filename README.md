@@ -222,6 +222,46 @@ pip install -r requirements.txt
 ```
 
 
+
+
+## Error 403 en Cardmarket (bloqueo anti-bot)
+
+Si el monitor muestra `403 Client Error: Forbidden`, no es fallo tuyo: Cardmarket está bloqueando la petición automática.
+
+Prueba este orden:
+
+1) Asegúrate de tener la última versión con `cloudscraper`:
+
+```bash
+cd ~/proyectos/GestorMarket
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2) En `.env` deja activado:
+
+```bash
+USE_CLOUDSCRAPER=true
+```
+
+3) Si aún da 403, añade cookie de tu navegador en `.env`:
+
+```bash
+CARDMARKET_COOKIE="__cf_bm=...; PHPSESSID=..."
+```
+
+4) Reintenta ejecución:
+
+```bash
+python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
+```
+
+> Cómo sacar cookie rápido (Chrome/Brave/Edge):
+> - Abre Cardmarket logueado.
+> - `F12` -> `Application` -> `Storage` -> `Cookies` -> `https://www.cardmarket.com`.
+> - Copia las cookies importantes (`__cf_bm`, `PHPSESSID`, etc.) y pégalas en una sola línea `CARDMARKET_COOKIE` separadas por `;`.
+
+
 ## Ubuntu: prueba completa (copiar y pegar)
 
 > Esta sección está pensada para hacerlo **sin conocimientos técnicos**.

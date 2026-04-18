@@ -13,6 +13,11 @@ from typing import Iterable
 
 import requests
 from bs4 import BeautifulSoup
+
+try:
+    import cloudscraper
+except Exception:  # dependencia opcional
+    cloudscraper = None
 from dotenv import load_dotenv
 
 LOG = logging.getLogger("cardmarket-monitor")
@@ -74,9 +79,43 @@ def env_bool(key: str, default: bool = False) -> bool:
     return val.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def create_http_session(*, use_cloudscraper: bool, cookie_header: str) -> requests.Session:
+    if use_cloudscraper and cloudscraper is not None:
+        session = cloudscraper.create_scraper(browser={"browser": "chrome", "platform": "linux", "mobile": False})
+    else:
+        session = requests.Session()
+
+    session.headers.update(
+        {
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "Upgrade-Insecure-Requests": "1",
+        }
+    )
+
+    if cookie_header.strip():
+        session.headers["Cookie"] = cookie_header.strip()
+
+    return session
+
+
 def get_html(session: requests.Session, url: str, timeout: int) -> str:
     LOG.info("GET %s", url)
-    response = session.get(url, timeout=timeout)
+    response = session.get(url, timeout=timeout, allow_redirects=True)
+
+    if response.status_code == 403:
+        raise requests.HTTPError(
+            "403 Forbidden al consultar Cardmarket. "
+            "Prueba activando USE_CLOUDSCRAPER=true y/o configurando CARDMARKET_COOKIE en .env.",
+            response=response,
+        )
+
     response.raise_for_status()
     return response.text
 
@@ -325,21 +364,27 @@ def run(env_file: str, ignored_file: str) -> int:
 
     ignored = load_ignored_cards(ignored_file)
 
-    session = requests.Session()
-    session.headers.update(
-        {
-            "User-Agent": (
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-            )
-        }
+    use_cloudscraper = env_bool("USE_CLOUDSCRAPER", True)
+    cardmarket_cookie = os.getenv("CARDMARKET_COOKIE", "")
+
+    if use_cloudscraper and cloudscraper is None:
+        LOG.warning("USE_CLOUDSCRAPER=true pero cloudscraper no está instalado. Se usará requests normal.")
+
+    session = create_http_session(
+        use_cloudscraper=use_cloudscraper,
+        cookie_header=cardmarket_cookie,
     )
 
     findings: list[Finding] = []
     total_listings = 0
 
     for profile_url in profile_urls:
-        profile_html = get_html(session, profile_url, timeout)
+        try:
+            profile_html = get_html(session, profile_url, timeout)
+        except requests.RequestException as err:
+            LOG.error("No se pudo leer el perfil %s: %s", profile_url, err)
+            continue
+
         listings = parse_our_listings(profile_html)
         LOG.info("%s: %d cartas detectadas", profile_url, len(listings))
 

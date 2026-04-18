@@ -25,6 +25,7 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 - `cron/cardmarket-monitor.cron`: ejemplo de programación en Linux.
 - `scripts/run_monitor_linux.sh`: ejecución manual asistida en Ubuntu/Linux.
 - `scripts/run_monitor_windows.ps1`: ejecución manual asistida en Windows.
+- `scripts/run_monitor_auto_linux.sh`: ejecución Linux con detección automática de ruta del repo.
 
 ---
 
@@ -60,6 +61,12 @@ Copia y pega:
 
 ```bash
 bash scripts/run_monitor_linux.sh
+```
+
+Si no estás seguro de la ruta real del proyecto, usa este comando (autodetecta el repo):
+
+```bash
+bash scripts/run_monitor_auto_linux.sh
 ```
 
 Qué pasará automáticamente:
@@ -232,34 +239,39 @@ Cardmarket puede cambiar estructura HTML o requerir anti-bot/cookies en ciertas 
 
 ## Prompt listo para Codex (Ubuntu, sin tocar nada manual)
 
-Copia y pega este prompt en Codex para que te lo haga él solo en Ubuntu:
+Copia y pega este prompt en Codex para que lo haga él solo, incluso si la ruta `/workspace/GestorMarket` no existe:
 
 ```text
-Quiero que ejecutes TODO por mí en Ubuntu en este repositorio, paso a paso y sin preguntarme nada salvo que sea imprescindible.
+Quiero que ejecutes TODO por mí en Ubuntu en este repositorio, paso a paso y sin pedirme la ruta del proyecto salvo que no haya forma automática de detectarla.
 
 Objetivo:
-1) Preparar entorno Python.
-2) Instalar dependencias.
-3) Crear `.env` desde `.env.example` si no existe.
-4) Enseñarme el `.env` y pedirme SOLO los datos mínimos que faltan (`OUR_TOTAL_SALES` y si quiero correo SMTP).
-5) Ejecutar el monitor en modo verbose.
-6) Confirmar si funcionó y mostrar resumen de resultados.
-7) Programarlo con cron a las 08:00 y 16:30.
-8) Verificar cron (`crontab -l`) y mostrar cómo ver logs (`tail -n 100 logs/cardmarket-monitor.log`).
+1) Detectar automáticamente la ruta del repo (buscar `src/cardmarket_monitor.py` en rutas típicas como `$PWD`, `$HOME`, `/workspace`, `/opt`).
+2) Preparar entorno Python.
+3) Instalar dependencias.
+4) Crear `.env` desde `.env.example` si no existe.
+5) Pedirme SOLO los datos mínimos que faltan (`OUR_TOTAL_SALES` y si quiero correo SMTP).
+6) Ejecutar el monitor en modo verbose.
+7) Confirmar si funcionó y mostrar resumen de resultados.
+8) Programarlo con cron a las 08:00 y 16:30.
+9) Verificar cron (`crontab -l`) y mostrar logs (`tail -n 100 logs/cardmarket-monitor.log`).
 
-Comandos que debes ejecutar tú (Codex) automáticamente:
-- `cd /workspace/GestorMarket`
-- `bash scripts/run_monitor_linux.sh`
-- Si falta configuración: editar `.env` conmigo y volver a ejecutar `bash scripts/run_monitor_linux.sh`
+Reglas:
+- No te detengas por defecto si `/workspace/GestorMarket` no existe; intenta autodetección primero.
+- Si existe `scripts/run_monitor_auto_linux.sh`, úsalo.
+- Si no existe, implementa autodetección con `find` limitado y continúa.
+
+Comandos preferidos:
+- `bash scripts/run_monitor_auto_linux.sh`
+- Si falla autodetección: `bash scripts/run_monitor_auto_linux.sh /ruta/real/GestorMarket`
 - `source .venv/bin/activate && python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose`
 - `crontab cron/cardmarket-monitor.cron`
 - `crontab -l`
 - `tail -n 100 logs/cardmarket-monitor.log`
 
-Quiero que al final me des:
-- qué comandos corriste,
+Al final dame:
+- comandos ejecutados,
 - cuáles pasaron/fallaron,
-- y qué tengo que revisar si algo falla.
+- y qué revisar si algo falla.
 ```
 
-Consejo: si quieres, puedes cambiar solo la ruta `cd /workspace/GestorMarket` por la ruta real donde tengas el proyecto.
+Consejo: para evitar líos de ruta, usa directamente `bash scripts/run_monitor_auto_linux.sh`.

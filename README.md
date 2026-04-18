@@ -31,6 +31,49 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 
 
 
+
+
+## Caso real: Ubuntu vacío (solo GitHub, sin nada local)
+
+Si te sale este error:
+
+```bash
+bash: scripts/run_monitor_auto_linux.sh: No such file or directory
+```
+
+significa que **todavía no estás dentro del repositorio clonado** en tu PC.
+
+### Opción recomendada (carpeta fuera de raíz)
+
+Usaremos `~/proyectos/GestorMarket` (dentro de tu HOME, no en `/`).
+
+1) Crea carpeta de trabajo:
+
+```bash
+mkdir -p ~/proyectos
+cd ~/proyectos
+```
+
+2) Clona tu repo de GitHub (sustituye URL):
+
+```bash
+git clone https://github.com/TU_USUARIO/GestorMarket.git
+```
+
+3) Entra en el repo:
+
+```bash
+cd ~/proyectos/GestorMarket
+```
+
+4) Ahora sí ejecuta el automatismo:
+
+```bash
+bash scripts/run_monitor_auto_linux.sh
+```
+
+---
+
 ## Ubuntu: prueba completa (copiar y pegar)
 
 > Esta sección está pensada para hacerlo **sin conocimientos técnicos**.
@@ -44,7 +87,7 @@ Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémo
 Copia y pega (ajusta la ruta si tu carpeta está en otro sitio):
 
 ```bash
-cd /workspace/GestorMarket
+cd ~/proyectos/GestorMarket
 ```
 
 Para confirmar que estás en el sitio correcto:
@@ -53,7 +96,7 @@ Para confirmar que estás en el sitio correcto:
 pwd
 ```
 
-Deberías ver: `/workspace/GestorMarket`
+Deberías ver: `.../proyectos/GestorMarket`
 
 ### 3) Ejecutar todo automático (primera prueba)
 
@@ -245,24 +288,30 @@ Copia y pega este prompt en Codex para que lo haga él solo, incluso si la ruta 
 Quiero que ejecutes TODO por mí en Ubuntu en este repositorio, paso a paso y sin pedirme la ruta del proyecto salvo que no haya forma automática de detectarla.
 
 Objetivo:
-1) Detectar automáticamente la ruta del repo (buscar `src/cardmarket_monitor.py` en rutas típicas como `$PWD`, `$HOME`, `/workspace`, `/opt`).
-2) Preparar entorno Python.
-3) Instalar dependencias.
-4) Crear `.env` desde `.env.example` si no existe.
-5) Pedirme SOLO los datos mínimos que faltan (`OUR_TOTAL_SALES` y si quiero correo SMTP).
-6) Ejecutar el monitor en modo verbose.
-7) Confirmar si funcionó y mostrar resumen de resultados.
-8) Programarlo con cron a las 08:00 y 16:30.
-9) Verificar cron (`crontab -l`) y mostrar logs (`tail -n 100 logs/cardmarket-monitor.log`).
+1) Si no existe repo local, crear `~/proyectos`, clonar ahí el repo y entrar en `~/proyectos/GestorMarket`.
+2) Detectar automáticamente la ruta del repo (buscar `src/cardmarket_monitor.py` en rutas típicas como `$PWD`, `$HOME`, `/workspace`, `/opt`).
+3) Preparar entorno Python.
+4) Instalar dependencias.
+5) Crear `.env` desde `.env.example` si no existe.
+6) Pedirme SOLO los datos mínimos que faltan (`OUR_TOTAL_SALES` y si quiero correo SMTP).
+7) Ejecutar el monitor en modo verbose.
+8) Confirmar si funcionó y mostrar resumen de resultados.
+9) Programarlo con cron a las 08:00 y 16:30.
+10) Verificar cron (`crontab -l`) y mostrar logs (`tail -n 100 logs/cardmarket-monitor.log`).
 
 Reglas:
-- No te detengas por defecto si `/workspace/GestorMarket` no existe; intenta autodetección primero.
+- No uses `/` (raíz) para alojar el proyecto salvo que yo lo pida.
+- Prioriza `~/proyectos/GestorMarket`.
+- No te detengas por defecto si `/workspace/GestorMarket` no existe; intenta clonar/autodetectar primero.
 - Si existe `scripts/run_monitor_auto_linux.sh`, úsalo.
 - Si no existe, implementa autodetección con `find` limitado y continúa.
 
 Comandos preferidos:
+- `mkdir -p ~/proyectos && cd ~/proyectos`
+- `git clone <URL_DE_MI_REPO> GestorMarket` (solo si no existe local)
+- `cd ~/proyectos/GestorMarket`
 - `bash scripts/run_monitor_auto_linux.sh`
-- Si falla autodetección: `bash scripts/run_monitor_auto_linux.sh /ruta/real/GestorMarket`
+- Si falla autodetección: `bash scripts/run_monitor_auto_linux.sh ~/proyectos/GestorMarket`
 - `source .venv/bin/activate && python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose`
 - `crontab cron/cardmarket-monitor.cron`
 - `crontab -l`

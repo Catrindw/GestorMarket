@@ -295,7 +295,7 @@ def render_report(findings: list[Finding]) -> str:
     if not findings:
         return "No se detectaron cartas con precio a corregir en esta ejecución."
 
-    lines = ["Informe de revisión de precios Cardmarket", ""]
+    lines = ["Informe de revisión de precios Cardmarket (solo lectura, no modifica precios)", ""]
     for i, f in enumerate(findings, start=1):
         lines.extend(
             [
@@ -330,6 +330,21 @@ def send_email(subject: str, body: str) -> None:
         if username:
             server.login(username, password)
         server.send_message(msg)
+
+
+
+
+def send_webhook(message: str) -> None:
+    webhook_url = os.getenv("WEBHOOK_URL", "").strip()
+    if not webhook_url:
+        raise ValueError("WEBHOOK_ENABLED=true pero falta WEBHOOK_URL")
+
+    response = requests.post(
+        webhook_url,
+        json={"text": message},
+        timeout=30,
+    )
+    response.raise_for_status()
 
 
 def load_ignored_cards(path: str) -> set[str]:
@@ -416,6 +431,9 @@ def run(env_file: str, ignored_file: str) -> int:
             subject=f"[Cardmarket] Revisión de precios ({len(findings)} hallazgos)",
             body=report,
         )
+
+    if env_bool("WEBHOOK_ENABLED", False):
+        send_webhook(report)
 
     LOG.info("Proceso completado. Revisadas=%d, hallazgos=%d", total_listings, len(findings))
     return 0

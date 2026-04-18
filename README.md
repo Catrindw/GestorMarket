@@ -1,6 +1,6 @@
 # Gestor de precios Cardmarket
 
-Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémon), comparar precios con vendedores españoles relevantes y generar alertas.
+Automatización para revisar el stock público de Cardmarket (Yu-Gi-Oh y Pokémon), comparar precios con vendedores españoles relevantes y generar alertas. **El script es de solo lectura: nunca modifica precios en Cardmarket.**
 
 ## Qué hace
 
@@ -223,6 +223,42 @@ pip install -r requirements.txt
 
 
 
+
+
+
+## Notificaciones (correo o webhook)
+
+El monitor **no cambia precios**; solo genera informe con cartas mal preciadas y enlaces.
+
+### Correo
+
+En `.env`:
+
+```env
+EMAIL_ENABLED=true
+SMTP_HOST=...
+SMTP_PORT=587
+SMTP_USERNAME=...
+SMTP_PASSWORD=...
+SMTP_FROM=...
+SMTP_TO=...
+SMTP_USE_TLS=true
+```
+
+### Webhook (alternativa a correo)
+
+En `.env`:
+
+```env
+WEBHOOK_ENABLED=true
+WEBHOOK_URL=https://...
+```
+
+Luego ejecuta:
+
+```bash
+python3 src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose
+```
 
 ## Error 403 en Cardmarket (bloqueo anti-bot)
 

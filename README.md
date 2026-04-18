@@ -247,6 +247,23 @@ SMTP_USE_TLS=true
 
 ### Webhook (alternativa a correo)
 
+
+### Opción recomendada para no llenar tu correo: `ntfy` (sin cuenta)
+
+Puedes usar webhook a `ntfy.sh` y recibir alertas en móvil/web sin usar email.
+
+En `.env`:
+
+```env
+EMAIL_ENABLED=false
+WEBHOOK_ENABLED=true
+WEBHOOK_URL=https://ntfy.sh/gestormarket-sakurakawaii-va
+```
+
+Con eso las alertas van a ese canal y no a tu bandeja personal.
+
+
+
 En `.env`:
 
 ```env

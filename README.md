@@ -92,6 +92,21 @@ gh auth status
 
 Si `gh auth status` muestra tu usuario, ya está autenticado correctamente.
 
+
+
+> **¿Dónde se pega el código?**
+>
+> No se pega en el Dashboard normal de GitHub. Se pega en la página de verificación de dispositivos:
+>
+> `https://github.com/login/device`
+>
+> Pasos rápidos:
+> 1. En terminal, cuando salga `First copy your one-time code`, copia el código.
+> 2. Pulsa Enter.
+> 3. Si no te abre bien la página, entra manualmente a `https://github.com/login/device`.
+> 4. Pega el código en el campo **Device code** y confirma.
+> 5. Autoriza `GitHub CLI`.
+
 ### Opción B: usar token personal (PAT)
 
 - En GitHub crea un token en: `Settings -> Developer settings -> Personal access tokens`.

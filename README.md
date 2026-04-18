@@ -228,3 +228,38 @@ Añade la URL del artículo a `ignored_cards.txt` (una por línea). El script no
 ## Nota importante
 
 Cardmarket puede cambiar estructura HTML o requerir anti-bot/cookies en ciertas páginas. El parser está diseñado para ser robusto y configurable, pero puede requerir ajustes de selectores si Cardmarket cambia el marcado.
+
+
+## Prompt listo para Codex (Ubuntu, sin tocar nada manual)
+
+Copia y pega este prompt en Codex para que te lo haga él solo en Ubuntu:
+
+```text
+Quiero que ejecutes TODO por mí en Ubuntu en este repositorio, paso a paso y sin preguntarme nada salvo que sea imprescindible.
+
+Objetivo:
+1) Preparar entorno Python.
+2) Instalar dependencias.
+3) Crear `.env` desde `.env.example` si no existe.
+4) Enseñarme el `.env` y pedirme SOLO los datos mínimos que faltan (`OUR_TOTAL_SALES` y si quiero correo SMTP).
+5) Ejecutar el monitor en modo verbose.
+6) Confirmar si funcionó y mostrar resumen de resultados.
+7) Programarlo con cron a las 08:00 y 16:30.
+8) Verificar cron (`crontab -l`) y mostrar cómo ver logs (`tail -n 100 logs/cardmarket-monitor.log`).
+
+Comandos que debes ejecutar tú (Codex) automáticamente:
+- `cd /workspace/GestorMarket`
+- `bash scripts/run_monitor_linux.sh`
+- Si falta configuración: editar `.env` conmigo y volver a ejecutar `bash scripts/run_monitor_linux.sh`
+- `source .venv/bin/activate && python src/cardmarket_monitor.py --env-file .env --ignored-file ignored_cards.txt --verbose`
+- `crontab cron/cardmarket-monitor.cron`
+- `crontab -l`
+- `tail -n 100 logs/cardmarket-monitor.log`
+
+Quiero que al final me des:
+- qué comandos corriste,
+- cuáles pasaron/fallaron,
+- y qué tengo que revisar si algo falla.
+```
+
+Consejo: si quieres, puedes cambiar solo la ruta `cd /workspace/GestorMarket` por la ruta real donde tengas el proyecto.

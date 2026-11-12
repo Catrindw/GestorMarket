@@ -14,3 +14,6 @@ GM-01 parser: falta HTML saneado y representativo de perfil/ofertas para fijar s
 GM-02: decidir si 300 ventas significa umbral absoluto o 300 más que las propias. Se conserva la regla actual relativa; profesionales requieren superar las ventas propias.
 GM-04: el cron existente apunta a /workspace/GestorMarket, ruta ausente en Ubuntu. No se ha modificado ni activado.
 El resultado no permite afirmar que una página vacía de parsing no contiene ofertas. No es aprobación para producción. Reversión: no integrar esta rama; no hay estado real que recuperar.
+
+## Publicación posterior — 12/11/2026
+Rama publicada en [PR3 en borrador](https://github.com/Catrindw/GestorMarket/pull/3), incremental sobre PR2. El estado «sin publicación» anterior es histórico. Código y 14 pruebas intactos; [contrato mínimo pendiente y búsqueda realizada](CONTRATO_HTML_PENDIENTE.md). No se ha activado el monitor.

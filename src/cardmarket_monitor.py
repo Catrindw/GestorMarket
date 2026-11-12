@@ -392,14 +392,20 @@ def run(env_file: str, ignored_file: str) -> int:
 
     findings: list[Finding] = []
     total_listings = 0
+    profiles_read = 0
+    articles_requested = 0
+    articles_read = 0
+    fetch_errors = 0
 
     for profile_url in profile_urls:
         try:
             profile_html = get_html(session, profile_url, timeout)
         except requests.RequestException as err:
+            fetch_errors += 1
             LOG.error("No se pudo leer el perfil %s: %s", profile_url, err)
             continue
 
+        profiles_read += 1
         listings = parse_our_listings(profile_html)
         LOG.info("%s: %d cartas detectadas", profile_url, len(listings))
 
@@ -408,8 +414,10 @@ def run(env_file: str, ignored_file: str) -> int:
             if listing.article_url in ignored:
                 continue
 
+            articles_requested += 1
             try:
                 article_html = get_html(session, listing.article_url, timeout)
+                articles_read += 1
                 offers = parse_offers(article_html)
                 finding = analyze_listing(
                     listing,
@@ -421,9 +429,20 @@ def run(env_file: str, ignored_file: str) -> int:
                 if finding:
                     findings.append(finding)
             except requests.RequestException as err:
+                fetch_errors += 1
                 LOG.warning("Error consultando %s: %s", listing.article_url, err)
 
-    report = render_report(findings)
+    coverage = (f"Perfiles leídos: {profiles_read}/{len(profile_urls)}. "
+                f"Artículos leídos: {articles_read}/{articles_requested}.")
+    if profiles_read == 0:
+        report = "Revisión fallida: no se pudo leer ningún perfil."
+    elif fetch_errors:
+        report = "Revisión incompleta: algunas páginas no se pudieron leer."
+        if findings:
+            report += "\n\n" + render_report(findings)
+    else:
+        report = render_report(findings)
+    report += "\n" + coverage
     print(report)
 
     if env_bool("EMAIL_ENABLED", False):
@@ -435,8 +454,8 @@ def run(env_file: str, ignored_file: str) -> int:
     if env_bool("WEBHOOK_ENABLED", False):
         send_webhook(report)
 
-    LOG.info("Proceso completado. Revisadas=%d, hallazgos=%d", total_listings, len(findings))
-    return 0
+    LOG.info("Proceso completado. Revisadas=%d, hallazgos=%d, errores=%d", total_listings, len(findings), fetch_errors)
+    return 1 if fetch_errors else 0
 
 
 def build_parser() -> argparse.ArgumentParser:

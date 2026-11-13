@@ -45,7 +45,13 @@ class OfflineTests(unittest.TestCase):
     def exercise(self,responses,profiles=2,listings=None):
         env={"CARDMARKET_USERNAME":"SYNTHETIC","PROFILE_URLS":",".join("https://example.invalid/"+str(i) for i in range(profiles)),"USE_CLOUDSCRAPER":"false","EMAIL_ENABLED":"false","WEBHOOK_ENABLED":"false"}
         output=io.StringIO()
-        listing_patch = patch.object(m,"parse_our_listings",return_value=listings) if listings is not None else contextlib.nullcontext()
+        original_inspect = m.inspect_page
+        def inspected(html, kind):
+            if kind == 'profile' and listings is not None:
+                # A synthetic adapter double, never evidence about live HTML.
+                return m.ParseResult(listings, 'READY', len(listings), 0, 'Synthetic test adapter')
+            return original_inspect(html, kind)
+        listing_patch = patch.object(m,"inspect_page",side_effect=inspected)
         with listing_patch,patch.dict(os.environ,env,clear=True),patch.object(m,"load_dotenv"),patch.object(m,"load_ignored_cards",return_value=set()),patch.object(m,"create_http_session",return_value=object()),patch.object(m,"get_html",side_effect=responses),patch.object(m,"send_email",side_effect=AssertionError("mail forbidden")),patch.object(m,"send_webhook",side_effect=AssertionError("webhook forbidden")),contextlib.redirect_stdout(output):
             code=m.run("synthetic-unused.env","synthetic-unused.txt")
         return code,output.getvalue()
@@ -59,10 +65,12 @@ class OfflineTests(unittest.TestCase):
         self.assertNotEqual(code,0)
         self.assertIn("incompleta",report.lower())
         self.assertIn("1/2",report)
-    def test_successful_empty_pages_are_not_transport_failure(self):
+    def test_received_unknown_pages_are_not_confirmed_empty(self):
         code,report=self.exercise(["<html></html>","<html></html>"])
-        self.assertEqual(code,0)
+        self.assertEqual(code,2)
         self.assertIn("2/2",report)
+        self.assertIn("HTML desconocido: 2",report)
+        self.assertNotIn("No se detectaron",report)
     def test_article_failure_is_incomplete(self):
         listing=m.Listing("Synthetic","https://example.invalid/card",2,Decimal("0.10"))
         code,report=self.exercise(["<html></html>",m.requests.RequestException("synthetic")],profiles=1,listings=[listing])
@@ -73,8 +81,9 @@ class OfflineTests(unittest.TestCase):
     def test_article_coverage_counts_successful_response(self):
         listing=m.Listing("Synthetic","https://example.invalid/card",2,Decimal("0.10"))
         code,report=self.exercise(["<html></html>","<html></html>"],profiles=1,listings=[listing])
-        self.assertEqual(code,0)
+        self.assertEqual(code,2)
         self.assertIn("Artículos leídos: 1/1",report)
+        self.assertIn("Artículos interpretados: 0/1",report)
     def test_missing_configuration_fails_before_network(self):
         with patch.dict(os.environ,{},clear=True),patch.object(m,"load_dotenv"):
             with self.assertRaisesRegex(ValueError,"CARDMARKET_USERNAME"):

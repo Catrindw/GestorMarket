@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import logging
 import os
 import re
@@ -50,6 +51,76 @@ class Finding:
     suggested_price: Decimal
     action: str  # "bajar" o "subir"
     reason: str
+
+
+@dataclass(frozen=True)
+class ReviewedPageEvidence:
+    """Assertions supplied by a reviewed adapter, never extracted from page text.
+
+    No production adapter exists yet. A fixture digest binds the assertions to
+    one response; a caller still needs a reviewed source for their meaning.
+    """
+    contract_id: str
+    content_sha256: str
+    expected_rows: int
+    fields_validated: bool
+    pagination_complete: bool
+    empty_confirmed: bool = False
+
+
+@dataclass
+class ParseResult:
+    items: list
+    status: str
+    candidate_rows: int
+    skipped_rows: int
+    reason: str
+
+    @property
+    def complete(self) -> bool:
+        return self.status in {'READY', 'EMPTY_CONFIRMED'}
+
+
+def classify_parse(html: str, items: list, candidate_rows: int,
+                   evidence: ReviewedPageEvidence | None = None) -> ParseResult:
+    """Classify coverage without guessing a provider's DOM or empty marker."""
+    skipped = max(0, candidate_rows - len(items))
+    unknown = 'PARTIAL' if candidate_rows or items else 'UNKNOWN_HTML'
+    def uncertain(reason):
+        return ParseResult(items, unknown, candidate_rows, skipped, reason)
+    if evidence is None:
+        return uncertain('Falta un contrato HTML revisado; recibir una página no acredita su interpretación.')
+    if (not isinstance(evidence.contract_id, str) or not evidence.contract_id.strip()
+            or type(evidence.expected_rows) is not int or evidence.expected_rows < 0
+            or evidence.content_sha256 != hashlib.sha256(html.encode('utf-8')).hexdigest()):
+        return uncertain('La evidencia de interpretación no corresponde a esta respuesta.')
+    if evidence.fields_validated is not True or evidence.pagination_complete is not True:
+        return uncertain('Los campos o la cobertura de páginas no están acreditados.')
+    if evidence.expected_rows != candidate_rows or len(items) != candidate_rows:
+        return uncertain('El recuento esperado, las filas candidatas y las interpretadas no coinciden.')
+    if evidence.expected_rows == 0:
+        if evidence.empty_confirmed is not True:
+            return uncertain('Cero filas interpretadas no acredita un listado vacío.')
+        return ParseResult([], 'EMPTY_CONFIRMED', 0, 0, 'Listado vacío acreditado por el contrato revisado.')
+    if evidence.empty_confirmed:
+        return uncertain('La evidencia de lista vacía contradice las filas presentes.')
+    return ParseResult(items, 'READY', candidate_rows, 0, 'Campos y cobertura acreditados por el contrato revisado.')
+
+
+def inspect_page(html: str, kind: str) -> ParseResult:
+    """Observe the current heuristic, without claiming a live HTML contract.
+
+    These selectors already belong to the old parser. Counts are diagnostic;
+    they do not certify that all real rows, languages or conditions were found.
+    No page can supply its own ReviewedPageEvidence through HTML attributes.
+    """
+    if kind not in {'profile', 'offers'}:
+        raise ValueError('Unknown page kind')
+    soup = BeautifulSoup(html, 'html.parser')
+    selector = "a[href*='/Products/']" if kind == 'profile' else "a[href*='/Users/']"
+    candidates = sum(row.select_one(selector) is not None for row in soup.select('table tbody tr'))
+    items = parse_our_listings(html) if kind == 'profile' else parse_offers(html)
+    return classify_parse(html, items, candidates)
 
 
 def money(value: str | float | Decimal) -> Decimal:
@@ -112,7 +183,7 @@ def get_html(session: requests.Session, url: str, timeout: int) -> str:
     if response.status_code == 403:
         raise requests.HTTPError(
             "403 Forbidden al consultar Cardmarket. "
-            "Prueba activando USE_CLOUDSCRAPER=true y/o configurando CARDMARKET_COOKIE en .env.",
+            "Consulta fallida; revisar el acceso autorizado. No equivale a un listado vacío.",
             response=response,
         )
 
@@ -396,6 +467,9 @@ def run(env_file: str, ignored_file: str) -> int:
     articles_requested = 0
     articles_read = 0
     fetch_errors = 0
+    profiles_interpreted = 0
+    articles_interpreted = 0
+    parse_states = {'UNKNOWN_HTML': 0, 'PARTIAL': 0, 'EMPTY_CONFIRMED': 0, 'READY': 0}
 
     for profile_url in profile_urls:
         try:
@@ -406,7 +480,13 @@ def run(env_file: str, ignored_file: str) -> int:
             continue
 
         profiles_read += 1
-        listings = parse_our_listings(profile_html)
+        profile_result = inspect_page(profile_html, 'profile')
+        parse_states[profile_result.status] += 1
+        if not profile_result.complete:
+            LOG.warning("Perfil sin interpretación acreditada: %s. %s", profile_result.status, profile_result.reason)
+            continue
+        profiles_interpreted += 1
+        listings = profile_result.items
         LOG.info("%s: %d cartas detectadas", profile_url, len(listings))
 
         for listing in listings:
@@ -418,7 +498,13 @@ def run(env_file: str, ignored_file: str) -> int:
             try:
                 article_html = get_html(session, listing.article_url, timeout)
                 articles_read += 1
-                offers = parse_offers(article_html)
+                article_result = inspect_page(article_html, 'offers')
+                parse_states[article_result.status] += 1
+                if not article_result.complete:
+                    LOG.warning("Ofertas sin interpretación acreditada: %s. %s", article_result.status, article_result.reason)
+                    continue
+                articles_interpreted += 1
+                offers = article_result.items
                 finding = analyze_listing(
                     listing,
                     offers,
@@ -433,13 +519,23 @@ def run(env_file: str, ignored_file: str) -> int:
                 LOG.warning("Error consultando %s: %s", listing.article_url, err)
 
     coverage = (f"Perfiles leídos: {profiles_read}/{len(profile_urls)}. "
-                f"Artículos leídos: {articles_read}/{articles_requested}.")
+                f"Artículos leídos: {articles_read}/{articles_requested}.\n"
+                f"Perfiles interpretados: {profiles_interpreted}/{profiles_read}. "
+                f"Artículos interpretados: {articles_interpreted}/{articles_read}.\n"
+                f"HTML desconocido: {parse_states['UNKNOWN_HTML']}. "
+                f"Interpretación parcial: {parse_states['PARTIAL']}. "
+                f"Listados vacíos acreditados: {parse_states['EMPTY_CONFIRMED']}.")
+    parse_errors = parse_states['UNKNOWN_HTML'] + parse_states['PARTIAL']
     if profiles_read == 0:
         report = "Revisión fallida: no se pudo leer ningún perfil."
     elif fetch_errors:
         report = "Revisión incompleta: algunas páginas no se pudieron leer."
         if findings:
             report += "\n\n" + render_report(findings)
+    elif parse_errors:
+        report = "Revisión incompleta: hay HTML desconocido o interpretación parcial; no se puede concluir ausencia de ofertas."
+        if findings:
+            report += "\n\nHallazgos limitados a las páginas acreditadas:\n" + render_report(findings)
     else:
         report = render_report(findings)
     report += "\n" + coverage
@@ -455,7 +551,7 @@ def run(env_file: str, ignored_file: str) -> int:
         send_webhook(report)
 
     LOG.info("Proceso completado. Revisadas=%d, hallazgos=%d, errores=%d", total_listings, len(findings), fetch_errors)
-    return 1 if fetch_errors else 0
+    return 1 if fetch_errors else 2 if parse_errors else 0
 
 
 def build_parser() -> argparse.ArgumentParser:

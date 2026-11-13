@@ -1,5 +1,11 @@
 # Contrato HTML pendiente del parser
 
+Actualización 14/11/2026: continúa el bloqueo por HTML representativo. La
+[clasificación de cobertura](COBERTURA_OFFLINE_2026-11-14.md) evita ahora tratar
+HTML desconocido como ausencia de ofertas. Resultado actual: 37 casos, 36 PASS y
+1 fallo esperado del parser conservado. El resto de este documento describe la
+evidencia y el cierre de la tanda anterior.
+
 Estado: **BLOQUEADO POR EJEMPLO REPRESENTATIVO**, 12/11/2026. [PR3 en borrador](https://github.com/Catrindw/GestorMarket/pull/3), incremental sobre PR2. La corrección de errores/cobertura de 37a086b se conserva; el parser y su expectedFailure no se han modificado.
 
 Se buscaron archivos HTML/HTM/HAR y fixtures en las copias de desarrollo, documentos y descargas locales pertinentes y en el proyecto Ubuntu y ubicaciones de análisis conocidas. No se encontró una captura saneada y utilizable que acreditase el DOM real. No se recorrieron sesiones de navegador ni se hizo una consulta a Cardmarket. La tabla sintética existente prueba el fallo al tratar una fila completa como precio y al mezclar sus cifras; no acredita clases o selectores del proveedor.
